@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KALI LINUX // TOOLS REFERENCE</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0c10;
+    --bg2:       #0d1018;
+    --bg3:       #111520;
+    --panel:     #0f1319;
+    --border:    #1a2535;
+    --green:     #00ff88;
+    --green-dim: #00cc6a;
+    --green-glow:#00ff8844;
+    --green-faint:#00ff8811;
+    --red:       #ff3366;
+    --orange:    #ff8c00;
+    --blue:      #00aaff;
+    --purple:    #a855f7;
+    --yellow:    #ffd700;
+    --text:      #c8d8e8;
+    --text-dim:  #5a7080;
+    --text-muted:#2a3a4a;
+    --mono:      'Share Tech Mono', monospace;
+    --display:   'Orbitron', sans-serif;
+    --body:      'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* SCANLINES */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.12) 2px,
+      rgba(0,0,0,0.12) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* NOISE GRAIN */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 998;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    padding: 60px 40px 40px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, #00ff8814, transparent);
+  }
+
+  .hero-grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    border: 1px solid var(--green-dim);
+    padding: 4px 12px;
+    background: var(--green-faint);
+    position: relative;
+  }
+
+  .hero-badge::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: blink 1.2s step-end infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(28px, 5vw, 64px);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: #fff;
+    position: relative;
+    text-shadow: 0 0 40px var(--green-glow);
+  }
+
+  .hero h1 span { color: var(--green); }
+
+  .hero-sub {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    max-width: 600px;
+    position: relative;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 32px;
+    position: relative;
+  }
+
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-num {
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--green);
+    text-shadow: 0 0 16px var(--green-glow);
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ─── CONTROLS ─── */
+  .controls {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,12,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 400px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 9px 12px 9px 36px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .search-input::placeholder { color: var(--text-muted); }
+
+  .search-input:focus {
+    border-color: var(--green-dim);
+    box-shadow: 0 0 0 2px var(--green-faint), inset 0 0 20px var(--green-faint);
+  }
+
+  .filter-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tag-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tag-btn:hover, .tag-btn.active {
+    border-color: var(--green-dim);
+    color: var(--green);
+    background: var(--green-faint);
+    box-shadow: 0 0 12px var(--green-glow);
+  }
+
+  .tag-btn[data-cat="info"] { --cat-color: #00aaff; }
+  .tag-btn[data-cat="vuln"] { --cat-color: #ff3366; }
+  .tag-btn[data-cat="exploit"] { --cat-color: #ff8c00; }
+  .tag-btn[data-cat="wireless"] { --cat-color: #a855f7; }
+  .tag-btn[data-cat="web"] { --cat-color: #00ff88; }
+  .tag-btn[data-cat="password"] { --cat-color: #ffd700; }
+  .tag-btn[data-cat="forensics"] { --cat-color: #00cccc; }
+  .tag-btn[data-cat="reverse"] { --cat-color: #ff6b6b; }
+  .tag-btn[data-cat="sniff"] { --cat-color: #7fff00; }
+  .tag-btn[data-cat="social"] { --cat-color: #ff69b4; }
+
+  .tag-btn[data-cat].active,
+  .tag-btn[data-cat]:hover {
+    border-color: var(--cat-color);
+    color: var(--cat-color);
+    background: color-mix(in srgb, var(--cat-color) 10%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--cat-color) 40%, transparent);
+  }
+
+  .result-count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  .result-count span { color: var(--green); }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+
+  /* ─── CATEGORY SECTION ─── */
+  .cat-section {
+    margin-bottom: 48px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .cat-header::before {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 60px;
+    height: 1px;
+    background: var(--cat-accent);
+    box-shadow: 0 0 8px var(--cat-accent);
+  }
+
+  .cat-icon {
+    width: 32px; height: 32px;
+    border: 1px solid var(--cat-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--cat-accent) 10%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--cat-accent) 30%, transparent);
+  }
+
+  .cat-title {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cat-accent);
+  }
+
+  .cat-desc {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-left: auto;
+  }
+
+  .cat-count {
+    font-family: var(--display);
+    font-size: 10px;
+    color: var(--cat-accent);
+    opacity: 0.6;
+    margin-left: 8px;
+  }
+
+  /* ─── TOOLS GRID ─── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 10px;
+  }
+
+  /* ─── TOOL CARD ─── */
+  .tool-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    position: relative;
+    cursor: default;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    overflow: hidden;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 100%;
+    background: var(--cat-accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: 0 0 8px var(--cat-accent);
+  }
+
+  .tool-card:hover {
+    border-color: color-mix(in srgb, var(--cat-accent) 50%, transparent);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--cat-accent) 15%, transparent),
+                inset 0 0 30px color-mix(in srgb, var(--cat-accent) 4%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .tool-card:hover::before { opacity: 1; }
+
+  .tool-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .tool-name {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.04em;
+    flex: 1;
+  }
+
+  .tool-badge {
+    font-family: var(--display);
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    background: color-mix(in srgb, var(--cat-accent) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cat-accent) 40%, transparent);
+    color: var(--cat-accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .tool-desc {
+    font-family: var(--body);
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 10px;
+  }
+
+  .tool-cmd {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green-dim);
+    background: #050709;
+    border: 1px solid #141e28;
+    padding: 5px 10px;
+    letter-spacing: 0.06em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .tool-cmd::before {
+    content: '$ ';
+    color: var(--text-muted);
+  }
+
+  .tool-tags-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tool-tag {
+    font-family: var(--display);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--text-muted);
+    padding: 1px 6px;
+  }
+
+  /* ─── HIDDEN ─── */
+  .tool-card.hidden { display: none; }
+  .cat-section.empty { display: none; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 80px 40px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+  .empty-state.visible { display: block; }
+  .empty-state-title {
+    font-family: var(--display);
+    font-size: 18px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .footer-brand {
+    color: var(--green);
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 8px var(--green-glow);
+  }
+
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  footer a:hover { color: var(--green); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--green-dim); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .hero, .main, .controls, footer { padding-left: 20px; padding-right: 20px; }
+    .hero-stats { gap: 24px; }
+    .tools-grid { grid-template-columns: 1fr; }
+    .filter-tags { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-grid-lines"></div>
+  <div class="hero-badge">DARK FIRE SECURITY // KALI REFERENCE</div>
+  <h1>KALI LINUX<br><span>TOOLS DATABASE</span></h1>
+  <p class="hero-sub">Complete reference for offensive security tools, organized by attack phase. Built for operators.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num" id="total-count">0</span>
+      <span class="stat-label">Total Tools</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">10</span>
+      <span class="stat-label">Categories</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">600+</span>
+      <span class="stat-label">Kali Tools Available</span>
+    </div>
+  </div>
+</header>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" type="text" id="search" placeholder="Search tools, capabilities, commands...">
+  </div>
+  <div class="filter-tags" id="filters">
+    <button class="tag-btn active" data-cat="all">ALL</button>
+    <button class="tag-btn" data-cat="info">RECON</button>
+    <button class="tag-btn" data-cat="vuln">VULN SCAN</button>
+    <button class="tag-btn" data-cat="exploit">EXPLOIT</button>
+    <button class="tag-btn" data-cat="wireless">WIRELESS</button>
+    <button class="tag-btn" data-cat="web">WEB</button>
+    <button class="tag-btn" data-cat="password">PASSWORDS</button>
+    <button class="tag-btn" data-cat="forensics">FORENSICS</button>
+    <button class="tag-btn" data-cat="reverse">REVERSE ENG</button>
+    <button class="tag-btn" data-cat="sniff">SNIFFING</button>
+    <button class="tag-btn" data-cat="social">SOCIAL ENG</button>
+  </div>
+  <div class="result-count"><span id="shown-count">0</span> tools shown</div>
+</div>
+
+<!-- MAIN -->
+<main class="main" id="main-content"></main>
+
+<div class="empty-state" id="empty-state">
+  <div class="empty-state-title">NO RESULTS</div>
+  <div>No tools match your current filter criteria.</div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-brand">DARK FIRE SECURITY</span>
+  <span>|</span>
+  <span>For authorized testing and educational use only.</span>
+  <span style="margin-left:auto;">KALI LINUX 2024.x // REFERENCE v1.0</span>
+</footer>
+
+<script>
+const CATEGORIES = [
+  {
+    id: 'info',
+    label: 'Reconnaissance & Information Gathering',
+    icon: '◈',
+    accent: '#00aaff',
+    desc: 'Passive and active target enumeration',
+    tools: [
+      { name: 'nmap', badge: 'NETWORK', desc: 'The world\'s most widely used network scanner. Maps hosts, open ports, services, OS fingerprinting, and supports NSE scripting for advanced enumeration.', cmd: 'nmap -sV -sC -O 192.168.1.0/24', tags: ['port scan', 'os detect', 'scripting'] },
+      { name: 'netdiscover', badge: 'ARP', desc: 'Active/passive ARP reconnaissance tool. Discovers hosts on a local network by sending ARP requests and analyzing responses — ideal for internal network mapping.', cmd: 'netdiscover -r 192.168.1.0/24', tags: ['arp', 'lan', 'host discovery'] },
+      { name: 'masscan', badge: 'FAST SCAN', desc: 'Asynchronous TCP port scanner capable of scanning the entire Internet in under 6 minutes. Much faster than nmap but less feature-rich.', cmd: 'masscan -p1-65535 10.0.0.0/8 --rate=1000', tags: ['port scan', 'high speed'] },
+      { name: 'recon-ng', badge: 'OSINT', desc: 'Full-featured web reconnaissance framework with independent modules, database storage, and reporting. Aggregates public sources to build target profiles.', cmd: 'recon-ng -w workspace', tags: ['osint', 'framework', 'modular'] },
+      { name: 'theHarvester', badge: 'OSINT', desc: 'Gathers emails, hostnames, IPs, URLs, and subdomains from public sources including search engines, PGP key servers, and LinkedIn.', cmd: 'theHarvester -d target.com -b google', tags: ['emails', 'subdomains', 'dns'] },
+      { name: 'dnsenum', badge: 'DNS', desc: 'Multithreaded DNS enumeration tool that performs zone transfers, brute-forces subdomains, and gathers DNS records including MX, NS, and SOA entries.', cmd: 'dnsenum target.com', tags: ['dns', 'zone transfer', 'subdomain'] },
+      { name: 'dnsrecon', badge: 'DNS', desc: 'Advanced DNS enumeration with support for standard record types, zone transfers, Google lookup, SRV records, and PTR reverse lookups.', cmd: 'dnsrecon -d target.com -t axfr', tags: ['dns', 'records', 'enum'] },
+      { name: 'fierce', badge: 'DNS', desc: 'Semi-lightweight DNS scanner designed to locate non-contiguous IP space and hostnames against a domain — bridges gap between nmap and theHarvester.', cmd: 'fierce --domain target.com', tags: ['dns', 'subdomain', 'brute'] },
+      { name: 'whois', badge: 'REGISTRY', desc: 'Queries domain registration databases to retrieve registrant contact info, nameservers, registration dates, and CIDR blocks for an IP or domain.', cmd: 'whois target.com', tags: ['domain', 'registrar', 'contact'] },
+      { name: 'maltego', badge: 'GRAPH', desc: 'Graphical link analysis and data mining tool for OSINT. Uses transforms to map relationships between people, domains, IPs, organizations, and social media.', cmd: 'maltego (GUI application)', tags: ['osint', 'graph', 'relationships'] },
+      { name: 'shodan', badge: 'IoT', desc: 'CLI interface to Shodan — the search engine for internet-connected devices. Finds exposed cameras, SCADA systems, servers, and more by banner and service.', cmd: 'shodan search "default password"', tags: ['iot', 'internet scan', 'banners'] },
+      { name: 'amass', badge: 'SUBDOMAINS', desc: 'In-depth attack surface mapping and asset discovery using both passive and active techniques including DNS, certificate transparency, and web scraping.', cmd: 'amass enum -passive -d target.com', tags: ['subdomain', 'attack surface', 'passive'] },
+    ]
+  },
+  {
+    id: 'vuln',
+    label: 'Vulnerability Scanning',
+    icon: '⬡',
+    accent: '#ff3366',
+    desc: 'Automated detection of known security flaws',
+    tools: [
+      { name: 'nessus', badge: 'ENTERPRISE', desc: 'Industry-standard vulnerability scanner from Tenable. Detects 65,000+ CVEs with credentialed/uncredentialed scans, compliance auditing, and detailed remediation advice.', cmd: 'nessus (web interface :8834)', tags: ['cve', 'compliance', 'credentialed'] },
+      { name: 'openvas', badge: 'OPEN SOURCE', desc: 'Open Vulnerability Assessment System — open source fork of Nessus. Performs authenticated network scans against the NVT feed of known vulnerabilities.', cmd: 'gvm-start && greenbone-security-assistant', tags: ['open source', 'network', 'nvt'] },
+      { name: 'nikto', badge: 'WEB', desc: 'Web server scanner that checks for dangerous files/programs, outdated server software, version-specific vulnerabilities, and misconfigurations across 6,700+ tests.', cmd: 'nikto -h http://target.com', tags: ['web server', 'misconfig', 'cgi'] },
+      { name: 'lynis', badge: 'AUDIT', desc: 'Security auditing and hardening tool for Unix/Linux systems. Performs deep system scans for security issues, kernel hardening, file permissions, and compliance.', cmd: 'lynis audit system', tags: ['linux', 'hardening', 'compliance'] },
+      { name: 'nuclei', badge: 'TEMPLATES', desc: 'Fast template-based vulnerability scanner. Uses community-maintained YAML templates to detect CVEs, misconfigs, exposed panels, and security issues at scale.', cmd: 'nuclei -u https://target.com -t cves/', tags: ['templates', 'fast', 'cve'] },
+      { name: 'wpscan', badge: 'WORDPRESS', desc: 'Black-box WordPress security scanner that detects vulnerable plugins/themes, weak passwords, user enumeration, and configuration issues on WordPress installations.', cmd: 'wpscan --url http://target.com --enumerate u', tags: ['wordpress', 'cms', 'plugins'] },
+      { name: 'searchsploit', badge: 'EXPLOIT DB', desc: 'Command-line search utility for Exploit Database — instantly finds public exploits and PoCs for a given service, version, or CVE number without internet access.', cmd: 'searchsploit apache 2.4', tags: ['exploits', 'offline', 'cve lookup'] },
+    ]
+  },
+  {
+    id: 'exploit',
+    label: 'Exploitation Frameworks',
+    icon: '⚡',
+    accent: '#ff8c00',
+    desc: 'Active exploitation and post-exploitation',
+    tools: [
+      { name: 'metasploit', badge: 'FRAMEWORK', desc: 'The world\'s most used penetration testing framework. Thousands of exploit modules, payloads, encoders, and post-exploitation tools unified under a single CLI/GUI.', cmd: 'msfconsole', tags: ['exploits', 'payloads', 'post-exploit'] },
+      { name: 'msfvenom', badge: 'PAYLOAD GEN', desc: 'Payload generator and encoder rolled into one tool. Creates standalone payloads (exe, elf, apk, etc.) for all platforms with optional encoding to evade AV.', cmd: 'msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f exe', tags: ['payload', 'encode', 'av evasion'] },
+      { name: 'exploitdb', badge: 'DATABASE', desc: 'Local copy of the Exploit-DB public exploit database, searchable via searchsploit. Contains raw PoC code for thousands of historical and recent CVEs.', cmd: 'searchsploit -m 12345', tags: ['exploits', 'poc', 'cve'] },
+      { name: 'beef-xss', badge: 'BROWSER', desc: 'Browser Exploitation Framework — hooks victim browsers via malicious JS and allows command-and-control through the web UI, enabling browser-based attacks.', cmd: 'beef-xss (web interface :3000)', tags: ['browser', 'xss', 'hook'] },
+      { name: 'sqlmap', badge: 'SQL INJECT', desc: 'Automated SQL injection and database takeover tool. Detects and exploits SQLi flaws across all major DBMS types with options for OS shell access and file read/write.', cmd: 'sqlmap -u "http://site.com/id=1" --dbs', tags: ['sqli', 'database', 'automated'] },
+      { name: 'armitage', badge: 'GUI', desc: 'Graphical cyber attack management tool for Metasploit. Visualizes targets, recommends exploits, and enables team collaboration during red team operations.', cmd: 'armitage (GUI application)', tags: ['metasploit', 'gui', 'team'] },
+      { name: 'empire', badge: 'POST-EXPLOIT', desc: 'Post-exploitation framework (PowerShell/Python agents) for Windows and Linux. Enables persistence, lateral movement, credential harvesting, and exfiltration without Metasploit.', cmd: 'powershell-empire', tags: ['post-exploit', 'powershell', 'agents'] },
+      { name: 'crackmapexec', badge: 'AD', desc: 'Swiss army knife for Active Directory pentesting. Enumerates shares, users, sessions, sprays passwords, runs commands via SMB/WinRM, and performs pass-the-hash.', cmd: 'crackmapexec smb 192.168.1.0/24 -u admin -p password', tags: ['active directory', 'smb', 'lateral movement'] },
+    ]
+  },
+  {
+    id: 'wireless',
+    label: 'Wireless Attacks',
+    icon: '◉',
+    accent: '#a855f7',
+    desc: 'WiFi, Bluetooth, and RF security testing',
+    tools: [
+      { name: 'aircrack-ng', badge: 'SUITE', desc: 'Complete WiFi security auditing suite including monitor mode, packet capture, WEP/WPA cracking, replay attacks, and fake AP creation across multiple tools.', cmd: 'aircrack-ng -w wordlist.txt capture.cap', tags: ['wpa', 'wep', 'wifi crack'] },
+      { name: 'airodump-ng', badge: 'CAPTURE', desc: 'Part of aircrack-ng suite. Captures raw 802.11 frames, lists nearby APs with BSSID/channel/encryption, and captures WPA 4-way handshakes.', cmd: 'airodump-ng --bssid AA:BB:CC:DD:EE:FF -c 6 -w capture wlan0mon', tags: ['capture', 'handshake', '802.11'] },
+      { name: 'aireplay-ng', badge: 'INJECT', desc: 'Generates and replays 802.11 frames to deauthenticate clients (forcing handshake capture), inject ARP packets for WEP cracking, and perform various DoS attacks.', cmd: 'aireplay-ng --deauth 10 -a BSSID wlan0mon', tags: ['deauth', 'inject', 'dos'] },
+      { name: 'hostapd-wpe', badge: 'EVIL AP', desc: 'Creates rogue access points for WPA-Enterprise attacks. Captures RADIUS credentials (MSCHAPv2 hashes) when clients connect to the evil twin.', cmd: 'hostapd-wpe hostapd-wpe.conf', tags: ['evil twin', 'wpa-enterprise', 'radius'] },
+      { name: 'wifite', badge: 'AUTOMATED', desc: 'Automated wireless auditing tool that attacks multiple encrypted networks simultaneously. Supports WEP, WPA/WPA2, WPS pin, and PMKID attacks hands-free.', cmd: 'wifite --wpa --dict wordlist.txt', tags: ['automated', 'wpa', 'wps'] },
+      { name: 'bettercap', badge: 'MITM', desc: 'Full-featured network attack and monitoring framework. Performs ARP spoofing, WiFi probing, BLE scanning, HTTP/S proxying, and credential sniffing in one tool.', cmd: 'bettercap -iface wlan0', tags: ['mitm', 'arp spoof', 'ble'] },
+      { name: 'kismet', badge: 'DETECTOR', desc: 'Passive wireless network detector and sniffer. Identifies hidden SSIDs, sniffs non-beaconing networks, logs GPS coordinates, and supports multiple capture sources.', cmd: 'kismet -c wlan0', tags: ['passive', 'detection', 'hidden ssid'] },
+      { name: 'reaver', badge: 'WPS', desc: 'Brute-force attack tool against WPS PIN authentication. Exploits the WPS design flaw to recover WPA/WPA2 passphrases in hours on vulnerable routers.', cmd: 'reaver -i wlan0mon -b BSSID -vv', tags: ['wps', 'brute force', 'pin'] },
+      { name: 'hcxtools', badge: 'PMKID', desc: 'Converts capture files and performs PMKID attacks — capturing the PMKID hash from a single frame without requiring a full 4-way handshake.', cmd: 'hcxdumptool -o capture.pcapng -i wlan0mon --enable_status=1', tags: ['pmkid', 'convert', 'hash'] },
+    ]
+  },
+  {
+    id: 'web',
+    label: 'Web Application Testing',
+    icon: '⬡',
+    accent: '#00ff88',
+    desc: 'OWASP Top 10 and web app security testing',
+    tools: [
+      { name: 'burp suite', badge: 'PROXY', desc: 'The industry-standard web application security testing platform. Intercepts HTTP/S traffic, scans for vulnerabilities, fuzzes parameters, and includes Spider, Intruder, and Repeater.', cmd: 'burpsuite (GUI application)', tags: ['proxy', 'intercept', 'scanner'] },
+      { name: 'dirb', badge: 'FUZZING', desc: 'Web content scanner that brute-forces URLs using wordlists. Discovers hidden directories, files, and endpoints on web servers by checking server responses.', cmd: 'dirb http://target.com /usr/share/wordlists/dirb/big.txt', tags: ['directory', 'brute force', 'discovery'] },
+      { name: 'gobuster', badge: 'FUZZING', desc: 'Fast directory/file and DNS subdomain brute-forcer written in Go. Significantly faster than dirb with support for vhost, S3, and Google Cloud bucket fuzzing.', cmd: 'gobuster dir -u http://target.com -w /usr/share/wordlists/dirbuster/medium.txt', tags: ['fast', 'directory', 'dns'] },
+      { name: 'ffuf', badge: 'FUZZING', desc: 'Fast web fuzzer with extensive customization. Fuzzes headers, POST data, URLs, and supports filtering by response code, size, and word count for precise discovery.', cmd: 'ffuf -w wordlist.txt -u http://target.com/FUZZ', tags: ['fuzzing', 'fast', 'filter'] },
+      { name: 'zaproxy', badge: 'SCANNER', desc: 'OWASP ZAP — open source web app scanner with active/passive scanning, spider, ajax spider, fuzzer, and REST API for CI/CD pipeline integration.', cmd: 'zaproxy (GUI application)', tags: ['owasp', 'scanner', 'active'] },
+      { name: 'commix', badge: 'CMD INJECT', desc: 'Automated command injection tool that detects and exploits OS command injection vulnerabilities in web applications across multiple injection techniques.', cmd: 'commix --url "http://target.com/search.php?id=1"', tags: ['command inject', 'automated', 'os'] },
+      { name: 'xsstrike', badge: 'XSS', desc: 'Advanced XSS detection and exploitation tool featuring a fuzzer, crawler, WAF fingerprinting, and DOM XSS analysis with intelligent payload generation.', cmd: 'xsstrike -u "http://target.com/search?q=test"', tags: ['xss', 'dom', 'waf bypass'] },
+      { name: 'wfuzz', badge: 'FUZZING', desc: 'Web application fuzzer for finding injections, authentication flaws, and unlinked resources. Supports multiple encoders and flexible filtering options.', cmd: 'wfuzz -c -w wordlist.txt http://target.com/FUZZ', tags: ['fuzzing', 'injection', 'auth'] },
+    ]
+  },
+  {
+    id: 'password',
+    label: 'Password Attacks',
+    icon: '🔑',
+    accent: '#ffd700',
+    desc: 'Cracking, spraying, and credential attacks',
+    tools: [
+      { name: 'hashcat', badge: 'GPU CRACK', desc: 'World\'s fastest GPU-based password recovery tool. Supports 300+ hash types, multiple attack modes (dictionary, brute-force, combinator, rule-based, mask), and custom rules.', cmd: 'hashcat -m 1000 hashes.txt rockyou.txt -r rules/best64.rule', tags: ['gpu', 'crack', 'rules'] },
+      { name: 'john', badge: 'CPU CRACK', desc: 'John the Ripper — classic CPU-based password cracker. Auto-detects hash type, supports wordlist + rules, incremental mode, and cracking 50+ hash types including shadow files.', cmd: 'john --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt', tags: ['cpu', 'auto detect', 'shadow'] },
+      { name: 'hydra', badge: 'ONLINE', desc: 'Parallelized network login cracker supporting 50+ protocols: SSH, FTP, HTTP, SMB, SMTP, RDP, and more. Performs credential stuffing and brute-force against live services.', cmd: 'hydra -l admin -P rockyou.txt ssh://192.168.1.1', tags: ['brute force', 'ssh', 'rdp'] },
+      { name: 'medusa', badge: 'ONLINE', desc: 'Fast, massively parallel network login auditor. Similar to Hydra but module-based design. Supports parallel testing of multiple hosts simultaneously.', cmd: 'medusa -h 192.168.1.1 -u admin -P wordlist.txt -M ssh', tags: ['parallel', 'modules', 'ssh'] },
+      { name: 'cewl', badge: 'WORDLIST GEN', desc: 'Custom word list generator that spiders a website and extracts words, emails, and metadata to build targeted wordlists based on the target\'s own web content.', cmd: 'cewl http://target.com -d 3 -m 5 -w wordlist.txt', tags: ['wordlist', 'spider', 'custom'] },
+      { name: 'crunch', badge: 'WORDLIST GEN', desc: 'Generates custom wordlists from a character set with specified minimum/maximum lengths and patterns. Useful for mask attacks with known partial password constraints.', cmd: 'crunch 8 8 ABCabc123 -o wordlist.txt', tags: ['generate', 'mask', 'charset'] },
+      { name: 'ophcrack', badge: 'RAINBOW', desc: 'Windows password cracker using rainbow tables. Cracks LM and NTLM hashes from Windows SAM files rapidly using precomputed tables — no GPU required.', cmd: 'ophcrack (GUI application)', tags: ['windows', 'ntlm', 'rainbow tables'] },
+      { name: 'mimikatz', badge: 'CRED DUMP', desc: 'Windows credential extraction tool. Dumps plaintext passwords, NTLM hashes, Kerberos tickets from LSASS memory — the cornerstone of post-exploitation on Windows.', cmd: 'mimikatz # sekurlsa::logonpasswords', tags: ['windows', 'lsass', 'kerberos'] },
+    ]
+  },
+  {
+    id: 'forensics',
+    label: 'Digital Forensics',
+    icon: '◎',
+    accent: '#00cccc',
+    desc: 'Evidence acquisition, analysis, and recovery',
+    tools: [
+      { name: 'autopsy', badge: 'PLATFORM', desc: 'Open source digital forensics platform with GUI. Analyzes disk images, recovers deleted files, builds timelines, extracts browser history, and generates case reports.', cmd: 'autopsy (web interface :9999)', tags: ['gui', 'disk image', 'recovery'] },
+      { name: 'volatility', badge: 'MEMORY', desc: 'Advanced memory forensics framework. Extracts processes, network connections, registry hives, credentials, and injected shellcode from RAM dumps across Windows/Linux/Mac.', cmd: 'vol -f memory.dmp windows.pslist', tags: ['memory', 'ram dump', 'processes'] },
+      { name: 'binwalk', badge: 'FIRMWARE', desc: 'Firmware analysis and extraction tool. Searches binary images for embedded files and executable code using file signature magic bytes — essential for IoT/embedded reverse engineering.', cmd: 'binwalk -e firmware.bin', tags: ['firmware', 'extract', 'iot'] },
+      { name: 'foremost', badge: 'FILE CARVE', desc: 'File carving tool that recovers files from disk images based on file headers, footers, and internal data structures — effective even on fragmented or deleted data.', cmd: 'foremost -t jpg,png,pdf -i disk.img', tags: ['carve', 'recovery', 'headers'] },
+      { name: 'dd', badge: 'IMAGING', desc: 'Unix disk imaging utility. Creates forensically sound bit-for-bit copies of storage devices including deleted space — the foundation of evidence acquisition.', cmd: 'dd if=/dev/sda of=disk.img bs=4M status=progress', tags: ['imaging', 'bit copy', 'acquisition'] },
+      { name: 'dcfldd', badge: 'IMAGING', desc: 'Enhanced version of dd with built-in hashing, output splitting, and progress reporting — designed specifically for forensic imaging with chain-of-custody hash verification.', cmd: 'dcfldd if=/dev/sda of=image.img hash=md5 hashlog=hashes.txt', tags: ['imaging', 'hash', 'forensic'] },
+      { name: 'exiftool', badge: 'METADATA', desc: 'Reads, writes, and edits metadata in image, audio, video, and document files. Extracts GPS coordinates, device info, timestamps, and software from EXIF/IPTC/XMP tags.', cmd: 'exiftool -a -u image.jpg', tags: ['metadata', 'exif', 'gps'] },
+      { name: 'testdisk', badge: 'RECOVERY', desc: 'Powerful free data recovery tool. Recovers lost partitions, repairs boot sectors, undeletes FAT/NTFS/ext2 files — works on physically damaged or accidentally formatted drives.', cmd: 'testdisk /dev/sda', tags: ['partition', 'recovery', 'boot'] },
+    ]
+  },
+  {
+    id: 'reverse',
+    label: 'Reverse Engineering',
+    icon: '⬤',
+    accent: '#ff6b6b',
+    desc: 'Binary analysis, decompilation, and debugging',
+    tools: [
+      { name: 'ghidra', badge: 'DISASSEMBLE', desc: 'NSA\'s open source software reverse engineering framework. Full decompiler, disassembler, debugger, and scripting engine supporting x86, ARM, MIPS, PowerPC, and more.', cmd: 'ghidra (GUI application)', tags: ['decompile', 'nsa', 'free'] },
+      { name: 'radare2', badge: 'FRAMEWORK', desc: 'Portable reverse engineering framework and hex editor. Supports analysis of binaries across dozens of architectures with scripting via r2pipe and Python.', cmd: 'r2 -A ./binary', tags: ['disassemble', 'hex', 'scripting'] },
+      { name: 'gdb', badge: 'DEBUGGER', desc: 'GNU Debugger — the standard Linux debugger. Sets breakpoints, steps through execution, inspects registers/memory, and supports PEDA/pwndbg extensions for exploit dev.', cmd: 'gdb ./binary', tags: ['debug', 'breakpoints', 'exploit dev'] },
+      { name: 'pwndbg', badge: 'GDB PLUGIN', desc: 'GDB plugin that supercharges the debugger with heap visualization, ROP gadget finding, register/stack context views, and exploit development helper commands.', cmd: 'gdb -q ./binary (with pwndbg loaded)', tags: ['heap', 'rop', 'exploit'] },
+      { name: 'strace', badge: 'SYSCALL', desc: 'Traces system calls and signals made by a process. Essential for understanding what files, sockets, and resources a binary accesses during execution — great for malware triage.', cmd: 'strace ./binary', tags: ['syscall', 'tracing', 'malware'] },
+      { name: 'ltrace', badge: 'LIB TRACE', desc: 'Traces dynamic library calls made by a program. Shows which shared library functions are called, their arguments, and return values — complements strace for binary analysis.', cmd: 'ltrace ./binary', tags: ['library', 'trace', 'dynamic'] },
+      { name: 'objdump', badge: 'DISASSEMBLE', desc: 'Displays information about object files. Disassembles code sections, shows symbol tables, and dumps section headers — fast static analysis without a full RE framework.', cmd: 'objdump -d -M intel ./binary', tags: ['static', 'symbols', 'sections'] },
+      { name: 'strings', badge: 'STRINGS', desc: 'Extracts printable character sequences from binary files. Quick triage step to find hardcoded passwords, URLs, error messages, and function names in unknown binaries.', cmd: 'strings -a binary | grep -i password', tags: ['static', 'hardcoded', 'quick triage'] },
+    ]
+  },
+  {
+    id: 'sniff',
+    label: 'Sniffing & Spoofing',
+    icon: '◈',
+    accent: '#7fff00',
+    desc: 'Traffic capture, analysis, and manipulation',
+    tools: [
+      { name: 'wireshark', badge: 'CAPTURE', desc: 'The world\'s leading network protocol analyzer. Captures live traffic or reads pcap files with deep inspection across 3000+ protocols and powerful display filter language.', cmd: 'wireshark (GUI) or tshark -i eth0 -w capture.pcap', tags: ['capture', 'pcap', 'analysis'] },
+      { name: 'tcpdump', badge: 'CLI CAPTURE', desc: 'Command-line packet analyzer. Captures network traffic with BPF filter syntax, outputs to pcap for Wireshark analysis — lightweight and scriptable.', cmd: 'tcpdump -i eth0 -w capture.pcap host 192.168.1.1', tags: ['cli', 'bpf', 'lightweight'] },
+      { name: 'arpspoof', badge: 'ARP POISON', desc: 'Part of dsniff suite. Sends forged ARP replies to poison the ARP cache of target hosts, redirecting their traffic through the attacker\'s machine for MITM interception.', cmd: 'arpspoof -i eth0 -t 192.168.1.5 192.168.1.1', tags: ['arp', 'mitm', 'poison'] },
+      { name: 'mitmproxy', badge: 'HTTP PROXY', desc: 'Interactive HTTPS proxy for MITM attacks. Intercepts, modifies, and replays HTTP/HTTPS traffic in real time with scripting support via Python addons.', cmd: 'mitmproxy -p 8080', tags: ['https', 'intercept', 'scripting'] },
+      { name: 'ettercap', badge: 'MITM', desc: 'Comprehensive suite for MITM attacks. Performs ARP poisoning, DNS spoofing, SSL stripping, password sniffing, and content injection on live connections.', cmd: 'ettercap -G (GUI) or ettercap -T -q -i eth0', tags: ['arp', 'ssl strip', 'dns spoof'] },
+      { name: 'dsniff', badge: 'SNIFF SUITE', desc: 'Collection of tools for network auditing and penetration testing including arpspoof, dnsspoof, mailsnarf, urlsnarf, and webspy for capturing cleartext credentials.', cmd: 'dsniff -i eth0', tags: ['suite', 'credentials', 'cleartext'] },
+      { name: 'sslstrip', badge: 'SSL STRIP', desc: 'Downgrades HTTPS connections to HTTP for credential capture during MITM attacks. Intercepts HTTPS redirects and serves HTTP to the victim while maintaining SSL with the server.', cmd: 'sslstrip -l 8080', tags: ['ssl', 'downgrade', 'credentials'] },
+      { name: 'yersinia', badge: 'L2 ATTACK', desc: 'Network tool for attacking Layer 2 protocols — STP, CDP, VTP, DHCP, 802.1Q/ISL, HSRP, and more. Performs VLAN hopping, DHCP starvation, and STP root takeovers.', cmd: 'yersinia -G (GUI application)', tags: ['l2', 'vlan', 'dhcp'] },
+    ]
+  },
+  {
+    id: 'social',
+    label: 'Social Engineering',
+    icon: '◎',
+    accent: '#ff69b4',
+    desc: 'Phishing, pretexting, and human-layer attacks',
+    tools: [
+      { name: 'set', badge: 'FRAMEWORK', desc: 'Social-Engineering Toolkit — open source Python framework for social engineering attacks. Generates phishing pages, malicious payloads, infected media, and mass mailers.', cmd: 'setoolkit', tags: ['phishing', 'payloads', 'framework'] },
+      { name: 'gophish', badge: 'PHISHING', desc: 'Open source phishing simulation platform. Creates landing pages, tracks email opens/clicks/credentials, manages campaigns, and generates detailed reporting for awareness training.', cmd: 'gophish (web interface :3333)', tags: ['phishing', 'simulation', 'campaign'] },
+      { name: 'evilginx2', badge: 'BYPASS MFA', desc: 'MITM attack framework for bypassing 2FA/MFA. Acts as a reverse proxy to relay and capture session cookies post-authentication — effective against OAuth and SSO portals.', cmd: 'evilginx2', tags: ['mfa bypass', 'session hijack', 'reverse proxy'] },
+      { name: 'lair', badge: 'COLLAB', desc: 'Distributed reporting tool for red teams. Centralizes intelligence across team members during penetration testing with tagging, notes, and service tracking.', cmd: 'lair (web application)', tags: ['collaboration', 'reporting', 'red team'] },
+      { name: 'maltego', badge: 'OSINT', desc: 'Visual link analysis platform that maps relationships between people, domains, social accounts, and infrastructure — used to build pretext profiles for targeted attacks.', cmd: 'maltego (GUI application)', tags: ['osint', 'graph', 'pretext'] },
+      { name: 'phoneinfoga', badge: 'PHONE OSINT', desc: 'Scans phone numbers using open source methods to find owner info, carrier, line type, spam reports, and social media accounts associated with the number.', cmd: 'phoneinfoga scan -n +15551234567', tags: ['phone', 'osint', 'lookup'] },
+    ]
+  }
+];
+
+// Build DOM
+function catStyle(cat) {
+  return `--cat-accent: ${cat.accent};`;
+}
+
+function buildUI() {
+  const main = document.getElementById('main-content');
+  let total = 0;
+
+  CATEGORIES.forEach(cat => {
+    const section = document.createElement('section');
+    section.className = 'cat-section';
+    section.dataset.cat = cat.id;
+    section.style = catStyle(cat);
+
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.innerHTML = `
+      <div class="cat-icon">${cat.icon}</div>
+      <div>
+        <div class="cat-title">${cat.label} <span class="cat-count">[${cat.tools.length}]</span></div>
+      </div>
+      <div class="cat-desc">${cat.desc}</div>
+    `;
+    section.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'tools-grid';
+
+    cat.tools.forEach(tool => {
+      total++;
+      const card = document.createElement('div');
+      card.className = 'tool-card';
+      card.dataset.name = tool.name.toLowerCase();
+      card.dataset.desc = tool.desc.toLowerCase();
+      card.dataset.cat = cat.id;
+      card.style = catStyle(cat);
+
+      card.innerHTML = `
+        <div class="tool-top">
+          <div class="tool-name">${tool.name}</div>
+          <div class="tool-badge">${tool.badge}</div>
+        </div>
+        <div class="tool-desc">${tool.desc}</div>
+        <div class="tool-cmd">${tool.cmd}</div>
+        <div class="tool-tags-row">
+          ${tool.tags.map(t => `<span class="tool-tag">${t}</span>`).join('')}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    main.appendChild(section);
+  });
+
+  document.getElementById('total-count').textContent = total;
+  updateCount();
+}
+
+function updateCount() {
+  const visible = document.querySelectorAll('.tool-card:not(.hidden)').length;
+  document.getElementById('shown-count').textContent = visible;
+  document.getElementById('empty-state').classList.toggle('visible', visible === 0);
+
+  // Hide empty category sections
+  document.querySelectorAll('.cat-section').forEach(sec => {
+    const hasVisible = sec.querySelectorAll('.tool-card:not(.hidden)').length > 0;
+    sec.classList.toggle('empty', !hasVisible);
+  });
+}
+
+let activeFilter = 'all';
+let searchTerm = '';
+
+function applyFilters() {
+  document.querySelectorAll('.tool-card').forEach(card => {
+    const matchCat = activeFilter === 'all' || card.dataset.cat === activeFilter;
+    const matchSearch = !searchTerm ||
+      card.dataset.name.includes(searchTerm) ||
+      card.dataset.desc.includes(searchTerm) ||
+      card.innerHTML.toLowerCase().includes(searchTerm);
+    card.classList.toggle('hidden', !(matchCat && matchSearch));
+  });
+  updateCount();
+}
+
+// Filter buttons
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.tag-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.cat;
+  applyFilters();
+});
+
+// Search
+document.getElementById('search').addEventListener('input', e => {
+  searchTerm = e.target.value.toLowerCase().trim();
+  applyFilters();
+});
+
+buildUI();
+</script>
+</body>
+</html>
